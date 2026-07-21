@@ -31,9 +31,16 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
             implementation(libs.kflite)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.components.resources)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "org.shad.adman.vectora.engine"
 }
