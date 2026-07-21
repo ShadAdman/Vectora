@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
@@ -28,6 +30,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
+            implementation(libs.kflite)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

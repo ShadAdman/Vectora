@@ -13,6 +13,7 @@ composeMultiplatform = "1.11.1"
 junit = "4.13.2"
 kotlin = "2.4.10"
 material3 = "1.11.0-alpha07"
+kflite = "3.80.30"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -32,6 +33,7 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
 compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
 compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+kflite = { module = "io.github.shadadman:kflite-core", version.ref = "kflite" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
