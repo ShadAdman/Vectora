@@ -5,12 +5,19 @@ import org.shad.adman.vectora.engine.model.ModelOutput
 
 /**
  * Postprocessor for the all-MiniLM-L6-v2 model.
- * Extracts the embedding from the model output.
  */
 class MiniLMPostprocessor : Postprocessor<ModelOutput, Vector> {
     override fun process(output: ModelOutput): Vector {
-        val tensor = output.tensors[701] as? FloatArray
-            ?: throw IllegalArgumentException("Missing output tensor with identifier 701")
-        return Vector(tensor)
+        val tensor = output.tensors[0] as? Array<*>
+            ?: throw IllegalArgumentException(
+                "Missing output tensor with identifier 0"
+            )
+
+        val embedding = tensor[0] as? FloatArray
+            ?: throw IllegalArgumentException(
+                "Invalid output tensor format. Expected [1, 384] FloatArray."
+            )
+
+        return Vector(embedding)
     }
 }
