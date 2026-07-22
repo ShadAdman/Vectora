@@ -2,16 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidMultiplatformLibrary)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.androidLibrary)
 }
 
 kotlin {
-    android {
-       namespace = "org.shad.adman.vectora.engine"
-       compileSdk = libs.versions.android.compileSdk.get().toInt()
-       minSdk = libs.versions.android.minSdk.get().toInt()
+    androidTarget {
        compilerOptions {
            jvmTarget = JvmTarget.JVM_11
        }
@@ -31,16 +26,30 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
             implementation(libs.kflite)
-            implementation(libs.compose.runtime)
-            implementation(libs.compose.components.resources)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.androidx.startup)
+            }
+        }
     }
 }
 
-compose.resources {
-    publicResClass = true
-    packageOfResClass = "org.shad.adman.vectora.engine"
+android {
+    namespace = "org.shad.adman.vectora.engine"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    sourceSets["main"].apply {
+        res.srcDirs("src/androidMain/res", "src/commonMain/resources/res")
+    }
 }
