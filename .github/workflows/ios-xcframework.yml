@@ -2,8 +2,10 @@ name: iOS XCFramework
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'
+      - '*'
 
 jobs:
   build-and-release:
@@ -21,7 +23,7 @@ jobs:
       - name: Build XCFramework
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          ./gradlew :vectora-search:assembleVectoraSearchXCFramework -PVERSION_NAME=$VERSION
+          ./gradlew :vectora-search:assembleReleaseIosFatFrameworkForVectoraSearchXCFramework -PVERSION_NAME=$VERSION
 
       - name: Package XCFramework
         run: |

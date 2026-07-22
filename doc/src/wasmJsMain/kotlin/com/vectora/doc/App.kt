@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,10 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun App() {
+    var currentScreen by remember { mutableStateOf("home") }
+
     MaterialTheme(
         colorScheme = darkColorScheme(
             primary = Color(0xFFBB86FC),
@@ -39,46 +39,62 @@ fun App() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Row(
-                modifier = Modifier.fillMaxSize().padding(48.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left Side: Text
-                Column(
-                    modifier = Modifier.weight(1.2f).padding(end = 48.dp)
-                ) {
-                    Text(
-                        text = "Vectora",
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 110.sp,
-                            brush = Brush.horizontalGradient(
-                                listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
-                            ),
-                            letterSpacing = (-2).sp
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text(
-                        text = "The on-device lightning fast semantic search engine for the next generation of Mobile applications.",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = Color.White.copy(alpha = 0.8f),
-                            lineHeight = 36.sp,
-                            fontWeight = FontWeight.Light
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(48.dp))
-                    UseVectoraButton()
+            AnimatedContent(
+                targetState = currentScreen,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
                 }
-
-                // Right Side: Animation
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IPhoneFrame()
+            ) { screen ->
+                if (screen == "home") {
+                    HomeScreen(onNavigateToApi = { currentScreen = "api" })
+                } else {
+                    ApiSection(onBack = { currentScreen = "home" })
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HomeScreen(onNavigateToApi: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxSize().padding(48.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left Side: Text
+        Column(
+            modifier = Modifier.weight(1.2f).padding(end = 48.dp)
+        ) {
+            Text(
+                text = "Vectora",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 110.sp,
+                    brush = Brush.horizontalGradient(
+                        listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
+                    ),
+                    letterSpacing = (-2).sp
+                )
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "The on-device lightning fast semantic search engine for the next generation of Mobile applications.",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    color = Color.White.copy(alpha = 0.8f),
+                    lineHeight = 36.sp,
+                    fontWeight = FontWeight.Light
+                )
+            )
+            Spacer(modifier = Modifier.height(48.dp))
+            UseVectoraButton(onClick = onNavigateToApi)
+        }
+
+        // Right Side: Animation
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            IPhoneFrame()
         }
     }
 }
@@ -292,7 +308,7 @@ fun ChatAnimation() {
 }
 
 @Composable
-fun UseVectoraButton() {
+fun UseVectoraButton(onClick: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition()
     val xOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -310,11 +326,11 @@ fun UseVectoraButton() {
     )
 
     Button(
-        onClick = {},
+        onClick = onClick,
         modifier = Modifier
             .height(58.dp)
             .width(240.dp)
-            .border(10.dp, brush, RoundedCornerShape(29.dp)),
+            .border(1.dp, brush, RoundedCornerShape(29.dp)),
         shape = RoundedCornerShape(29.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,

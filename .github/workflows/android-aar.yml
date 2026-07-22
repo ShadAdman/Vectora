@@ -6,7 +6,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - '*'
 
 jobs:
   build:
@@ -25,9 +25,9 @@ jobs:
           chmod +x ./gradlew
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
-            ./gradlew :vectora-search:assembleRelease -PVERSION_NAME=$VERSION
+            ./gradlew :vectora-search:assemble -PVERSION_NAME=$VERSION
           else
-            ./gradlew :vectora-search:assembleRelease
+            ./gradlew :vectora-search:assemble
           fi
 
       - name: Upload AAR
