@@ -1,8 +1,12 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
+import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.mavenPublish)
 }
 
 kotlin {
@@ -15,13 +19,15 @@ kotlin {
        }
     }
     
+    val xcf = XCFramework("VectoraSearch")
     listOf(
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "VectoraSearch"
-            isStatic = true
+            isStatic = false // Dynamic framework is better for XCFramework distribution
+            xcf.add(this)
         }
     }
 
@@ -36,4 +42,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
     }
+}
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.S01)
+    signAllPublications()
 }

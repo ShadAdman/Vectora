@@ -1,0 +1,66 @@
+name: iOS XCFramework
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build XCFramework
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          ./gradlew :vectora-search:assembleVectoraSearchXCFramework -PVERSION_NAME=$VERSION
+
+      - name: Package XCFramework
+        run: |
+          # Find the XCFramework
+          XCF_PATH=$(find . -name "VectoraSearch.xcframework" -type d | grep "release" | head -n 1)
+          if [ -z "$XCF_PATH" ]; then
+            XCF_PATH=$(find . -name "VectoraSearch.xcframework" -type d | head -n 1)
+          fi
+          echo "Found XCFramework at $XCF_PATH"
+          
+          PARENT_DIR=$(dirname "$XCF_PATH")
+          cd "$PARENT_DIR"
+          zip -r VectoraSearch.xcframework.zip VectoraSearch.xcframework
+          CHECKSUM=$(swift package compute-checksum VectoraSearch.xcframework.zip)
+          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_ENV
+          mv VectoraSearch.xcframework.zip $GITHUB_WORKSPACE/VectoraSearch.xcframework.zip
+
+      - name: Update Package.swift
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          sed -i '' "s|url: \".*\"|url: \"https://github.com/shadadman/Vectora/releases/download/v$VERSION/VectoraSearch.xcframework.zip\"|" Package.swift
+          sed -i '' "s|checksum: \".*\"|checksum: \"$CHECKSUM\"|" Package.swift
+          cat Package.swift
+
+      - name: Commit and Push Package.swift
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Package.swift
+          git commit -m "Update Package.swift for release ${GITHUB_REF#refs/tags/v}" || echo "No changes to commit"
+          git push origin HEAD:main
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: VectoraSearch.xcframework.zip
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
