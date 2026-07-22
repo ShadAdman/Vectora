@@ -84,8 +84,8 @@ fun App() {
             val search = VectoraSearch.createMiniLM<Product>()
             
             status = "Indexing products..."
-            search.index(products) { p -> 
-                "${p.brand} ${p.name} ${p.description} ${p.category} ${p.color}" 
+            search.index(products) { p ->
+                "${p.brand} ${p.name} ${p.description} ${p.category} ${p.color}"
             }
             searchEngine = search
             isReady = true
