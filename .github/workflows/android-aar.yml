@@ -22,6 +22,7 @@ jobs:
 
       - name: Build Android AAR
         run: |
+          chmod +x ./gradlew
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
             ./gradlew :vectora-search:assembleRelease -PVERSION_NAME=$VERSION
