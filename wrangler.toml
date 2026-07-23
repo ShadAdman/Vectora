@@ -1,0 +1,6 @@
+name = "vectora"
+main = "worker.js"
+compatibility_date = "2026-07-23"
+
+[assets]
+directory = "./doc/build/dist/wasmJs/productionExecutable"
