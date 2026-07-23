@@ -52,7 +52,7 @@ fun ApiSection(onBack: () -> Unit) {
             Spacer(modifier = Modifier.weight(1f))
 
             TextButton(onClick = onBack) {
-                Text("← Back to Home", color = Color(0xFFBB86FC))
+                Text("< Back to Home", color = Color(0xFFBB86FC))
             }
         }
 

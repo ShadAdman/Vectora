@@ -24,9 +24,9 @@ fun CodeBlock(code: String) {
         Text(
             text = code,
             fontFamily = FontFamily.Monospace,
-            fontSize = 14.sp,
+            fontSize = 16.sp,
             color = Color(0xFFE0E0E0),
-            lineHeight = 20.sp
+            lineHeight = 23.sp
         )
     }
 }

@@ -47,7 +47,7 @@ fun UsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "1. Define your Data Model",
+            text = "1. Your Data Model",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -78,10 +78,12 @@ fun UsageSection() {
         CodeBlock(
             """
             // Create instance with MiniLM model
+            
             val vectora = VectoraSearch.createMiniLM<Product>()
 
             // Index your list of products
             // The lambda defines which fields are used for semantic search
+            
             vectora.index(products) { it.name + " " + it.description }
             """.trimIndent()
         )
@@ -96,12 +98,15 @@ fun UsageSection() {
         CodeBlock(
             """
             // Search with natural language
+            
             vectora.search("lightweight running shoes for marathon")
 
             // Collect results in your UI
+            
             vectora.searchResults.collect { results ->
                 // results is a list of SearchResult<Product> containing 
                 // the original item and its similarity score
+                
                 adapter.submitList(results.map { it.item })
             }
             """.trimIndent()
