@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,8 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.imageResource
+import org.jetbrains.compose.resources.painterResource
 import vectora.doc.generated.resources.Res
+import vectora.doc.generated.resources.vectora_logo
 
 @Composable
 fun App() {
@@ -69,20 +70,28 @@ fun HomeScreen(onNavigateToApi: () -> Unit) {
         Column(
             modifier = Modifier.weight(1.2f).padding(end = 48.dp)
         ) {
-            Text(
-                text = "Vectora",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 110.sp,
-                    brush = Brush.horizontalGradient(
-                        listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
-                    ),
-                    letterSpacing = (-2).sp
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(Res.drawable.vectora_logo),
+                    contentDescription = "Vectora Logo",
+                    modifier = Modifier.size(120.dp)
                 )
-            )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Vectora",
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 110.sp,
+                        brush = Brush.horizontalGradient(
+                            listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
+                        ),
+                        letterSpacing = (-2).sp
+                    )
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "The on-device lightning fast semantic search engine for the next generation of Mobile applications.",
+                text = "The on-device lightning-fast semantic search engine for the next generation of Mobile applications.",
                 style = MaterialTheme.typography.headlineSmall.copy(
                     color = Color.White.copy(alpha = 0.8f),
                     lineHeight = 36.sp,
@@ -170,6 +179,22 @@ fun ChatAnimation() {
         )
     }
 
+    val infiniteTransition = rememberInfiniteTransition()
+    val xOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(5000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        )
+    )
+
+    val brush = Brush.linearGradient(
+        colors = listOf(Color(0xFFBB86FC), Color(0xFF03DAC6), Color(0xFFBB86FC)),
+        start = Offset(xOffset - 500f, 0f),
+        end = Offset(xOffset, 500f)
+    )
+
     LaunchedEffect(Unit) {
         while(true) {
             // Reset
@@ -220,43 +245,54 @@ fun ChatAnimation() {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Chat Header
+        // Search Input at Top
         Box(
-            modifier = Modifier.fillMaxWidth().height(64.dp).background(Color(0xFF141414)),
-            contentAlignment = Alignment.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .border(4.dp, brush, RoundedCornerShape(28.dp))
+                .background(Color(0xFF1A1A1A), RoundedCornerShape(28.dp))
+                .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            Text("Vectora", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val inputText = when {
+                    displayedThirdQuery.isNotEmpty() || isThirdSent -> displayedThirdQuery
+                    displayedSecondQuery.isNotEmpty() || isSecondSent -> displayedSecondQuery
+                    else -> displayedQuery
+                }
+
+                Text(
+                    text = if (inputText.isEmpty()) "Search by describing..." else inputText,
+                    color = if (inputText.isEmpty()) Color.Gray else Color.White,
+                    modifier = Modifier.weight(1f).animateContentSize(),
+                    fontSize = 15.sp
+                )
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = if (isThirdSent || (isSecondSent && !showThirdResults && displayedThirdQuery.isEmpty())) Color(0xFFBB86FC) else Color.Gray.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
 
-        // Chat History
+        // Chat History (Results only)
         Box(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
             Column(modifier = Modifier.fillMaxSize().padding(vertical = 16.dp)) {
                 if (showThirdResults) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        ChatBubble(thirdQuery, isUser = true)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Spacer(modifier = Modifier.height(12.dp))
                         Box(modifier = Modifier.weight(1f)) {
                             ProductGrid(productsDiscounted)
                         }
                     }
-                } else if (displayedThirdQuery.isNotEmpty()) {
-                    ChatBubble(displayedThirdQuery, isUser = true)
                 } else if (showSecondResults) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        ChatBubble(secondQuery, isUser = true)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Spacer(modifier = Modifier.height(12.dp))
                         Box(modifier = Modifier.weight(1f)) {
                             ProductGrid(productsMixed)
                         }
                     }
-                } else if (displayedSecondQuery.isNotEmpty()) {
-                    ChatBubble(displayedSecondQuery, isUser = true)
                 } else if (showResults) {
                     Column(modifier = Modifier.fillMaxSize()) {
-                        ChatBubble(fullQuery, isUser = true)
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Here are 20 results matching your criteria that are currently in stock:",
                             color = Color.Gray,
@@ -268,38 +304,7 @@ fun ChatAnimation() {
                             ProductGrid(products2026)
                         }
                     }
-                } else if (displayedQuery.isNotEmpty()) {
-                    ChatBubble(displayedQuery, isUser = true)
                 }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(Color(0xFF1A1A1A), RoundedCornerShape(28.dp))
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val inputText = if (!isSent) displayedQuery
-                else if (showResults && !isSecondSent) displayedSecondQuery
-                else if (showSecondResults && !isThirdSent) displayedThirdQuery
-                else ""
-
-                Text(
-                    text = if (inputText.isEmpty()) "Search by describing..." else inputText,
-                    color = if (inputText.isEmpty()) Color.Gray else Color.White,
-                    modifier = Modifier.weight(1f),
-                    fontSize = 15.sp,
-                    maxLines = 1
-                )
-                Icon(
-                    Icons.Default.ArrowForward,
-                    contentDescription = "Send",
-                    tint = if (isThirdSent || (isSecondSent && !showThirdResults && displayedThirdQuery.isEmpty())) Color(0xFFBB86FC) else Color.Gray.copy(alpha = 0.5f),
-                    modifier = Modifier.size(20.dp)
-                )
             }
         }
     }
@@ -328,7 +333,7 @@ fun UseVectoraButton(onClick: () -> Unit) {
         modifier = Modifier
             .height(58.dp)
             .width(240.dp)
-            .border(1.dp, brush, RoundedCornerShape(29.dp)),
+            .border(4.dp, brush, RoundedCornerShape(29.dp)),
         shape = RoundedCornerShape(29.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
@@ -341,24 +346,6 @@ fun UseVectoraButton(onClick: () -> Unit) {
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-    }
-}
-
-@Composable
-fun ChatBubble(text: String, isUser: Boolean) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-    ) {
-        Box(
-            modifier = Modifier
-                .widthIn(max = 260.dp)
-                .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = if (isUser) 18.dp else 4.dp, bottomEnd = if (isUser) 4.dp else 18.dp))
-                .background(if (isUser) Color(0xFFBB86FC) else Color(0xFF262626))
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-        ) {
-            Text(text, color = if (isUser) Color.Black else Color.White, fontSize = 14.sp, lineHeight = 20.sp)
-        }
     }
 }
 
