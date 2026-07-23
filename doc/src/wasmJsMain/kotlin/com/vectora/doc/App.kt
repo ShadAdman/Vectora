@@ -33,7 +33,8 @@ fun App() {
             primary = Color(0xFFBB86FC),
             background = Color(0xFF000000),
             surface = Color(0xFF121212)
-        )
+        ),
+        typography = LatoTypography()
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -231,12 +232,6 @@ fun ChatAnimation() {
                     Column(modifier = Modifier.fillMaxSize()) {
                         ChatBubble(thirdQuery, isUser = true)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            "Found 3 models with discounts greater than 10%:",
-                            color = Color.Gray,
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp
-                        )
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(modifier = Modifier.weight(1f)) {
                             ProductGrid(productsDiscounted)
