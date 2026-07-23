@@ -72,6 +72,13 @@ fun ImportSection() {
             else -> ""
         }
 
-        CodeBlock(code)
+        CodeBlock(
+            code = code,
+            language = when (selectedPlatform) {
+                "Android", "KMP" -> "kotlin"
+                "iOS" -> "ios"
+                else -> "text"
+            }
+        )
     }
 }

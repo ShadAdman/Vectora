@@ -79,12 +79,12 @@ fun UsageSection() {
             """
             // Create instance with MiniLM model
             
-            val vectora = VectoraSearch.createMiniLM<Product>()
+            val vectora = VectoraSearch.create<Product>()
 
             // Index your list of products
             // The lambda defines which fields are used for semantic search
             
-            vectora.index(products) { it.name + " " + it.description }
+            vectora.index(products) { it.name + " " + it.description + " " + it.price }
             """.trimIndent()
         )
 
@@ -99,13 +99,13 @@ fun UsageSection() {
             """
             // Search with natural language
             
-            vectora.search("lightweight running shoes for marathon")
+            vectora.search("lightweight running shoes for marathon under 150")
 
             // Collect results in your UI
             
             vectora.searchResults.collect { results ->
                 // results is a list of SearchResult<Product> containing 
-                // the original item and its similarity score
+                // the original item and its similarity `score`
                 
                 adapter.submitList(results.map { it.item })
             }
