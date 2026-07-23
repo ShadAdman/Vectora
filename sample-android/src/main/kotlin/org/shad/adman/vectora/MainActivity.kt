@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import org.shad.adman.vectora.core.model.SearchResult
 import org.shad.adman.vectora.search.VectoraSearch
@@ -81,7 +80,7 @@ fun App() {
     LaunchedEffect(Unit) {
         try {
             status = "Loading model..."
-            val search = VectoraSearch.createMiniLM<Product>()
+            val search = VectoraSearch.create<Product>()
             
             status = "Indexing products..."
             search.index(products) { p ->

@@ -30,7 +30,7 @@ class VectoraSearch<T> private constructor(
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model.
          * Automatically loads the model from the engine's resources.
          */
-        fun <T> createMiniLM(): VectoraSearch<T> {
+        fun <T> create(): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM()
             return VectoraSearch(engine)
         }
@@ -39,7 +39,7 @@ class VectoraSearch<T> private constructor(
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model with provided bytes.
          * @param modelBytes The raw bytes of the TFLite model.
          */
-        fun <T> createMiniLM(modelBytes: ByteArray): VectoraSearch<T> {
+        fun <T> create(modelBytes: ByteArray): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM(modelBytes)
             return VectoraSearch(engine)
         }
