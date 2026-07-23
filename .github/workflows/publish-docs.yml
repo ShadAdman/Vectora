@@ -33,5 +33,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy doc/build/dist/wasmJs/productionExecutable --project-name=vectora
+          command: deploy
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
