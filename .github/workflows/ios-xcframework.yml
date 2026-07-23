@@ -2,8 +2,6 @@ name: iOS XCFramework
 
 on:
   push:
-    branches:
-      - main
     tags:
       - '*'
 
