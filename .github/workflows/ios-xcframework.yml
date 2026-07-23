@@ -20,6 +20,7 @@ jobs:
 
       - name: Build XCFramework
         run: |
+          chmod +x ./gradlew
           VERSION=${GITHUB_REF#refs/tags/v}
           ./gradlew :vectora-search:assembleReleaseIosFatFrameworkForVectoraSearchXCFramework -PVERSION_NAME=$VERSION
 

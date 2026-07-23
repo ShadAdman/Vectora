@@ -20,11 +20,9 @@ jobs:
       - name: Publish to Maven Central
         run: |
           chmod +x ./gradlew
-          VERSION=${GITHUB_REF#refs/tags/v}
-          ./gradlew publishAllPublicationsToMavenCentralRepository -PVERSION_NAME=$VERSION
+          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_PRIVATE_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_PASSPHRASE }}
-          ORG_GRADLE_PROJECT_sonatypeHost: S01
