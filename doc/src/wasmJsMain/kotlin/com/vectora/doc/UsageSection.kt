@@ -38,7 +38,7 @@ fun UsageSection() {
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Vectora is highly optimized for mobile devices; indexing 100 products typically takes only a few hundred milliseconds, making it suitable for real-time local updates.",
+            text = "Vectora is highly optimized for mobile devices. indexing 1000 products/items/models typically takes only a few milliseconds, making it suitable for real-time local updates and an excellent user experience.",
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 16.sp,
             lineHeight = 24.sp
@@ -47,7 +47,7 @@ fun UsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "1. Your Data Model",
+            text = "1. Your Data Model Example",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
@@ -70,7 +70,7 @@ fun UsageSection() {
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "The 'products' variable is a simple List<Product> containing your application data. This can be any list of your items or data. If you do the indexing before sending your users to search, it makes the search ux very smooth and blazingly fast",
+            text = "The 'products' variable is a simple List<Product> containing your application data. This can be any list of your items or data that comes from remote or your local database. If you do the indexing before sending your users to search section, it makes the search ux very smooth and blazingly fast",
             color = Color.White.copy(alpha = 0.6f),
             fontSize = 14.sp
         )

@@ -2,9 +2,7 @@ package com.vectora.doc
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -17,10 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -62,60 +62,106 @@ fun App() {
 
 @Composable
 fun HomeScreen(onNavigateToApi: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxSize().padding(48.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Left Side: Text
-        Column(
-            modifier = Modifier.weight(1.2f).padding(end = 48.dp)
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Image(
-                    painter = painterResource(Res.drawable.vectora_logo),
-                    contentDescription = "Vectora Logo",
-                    modifier = Modifier.size(120.dp)
-                )
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isMobile = maxWidth < 900.dp
+        
+        if (isMobile) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Animation on top
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(650.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IPhoneFrame(modifier = Modifier.scale(0.85f))
+                }
+                
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Vectora",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 110.sp,
-                        brush = Brush.horizontalGradient(
-                            listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
-                        ),
-                        letterSpacing = (-2).sp
-                    )
-                )
+                
+                // Text below
+                HomeScreenText(onNavigateToApi = onNavigateToApi, isMobile = true)
+                
+                Spacer(modifier = Modifier.height(48.dp))
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "The on-device lightning-fast semantic search engine for the next generation of Mobile applications.",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color.White.copy(alpha = 0.8f),
-                    lineHeight = 36.sp,
-                    fontWeight = FontWeight.Light
+        } else {
+            Row(
+                modifier = Modifier.fillMaxSize().padding(48.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Side: Text
+                HomeScreenText(
+                    onNavigateToApi = onNavigateToApi,
+                    isMobile = false,
+                    modifier = Modifier.weight(1.2f)
                 )
-            )
-            Spacer(modifier = Modifier.height(48.dp))
-            UseVectoraButton(onClick = onNavigateToApi)
-        }
 
-        // Right Side: Animation
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            IPhoneFrame()
+                // Right Side: Animation
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IPhoneFrame()
+                }
+            }
         }
     }
 }
 
 @Composable
-fun IPhoneFrame() {
+fun HomeScreenText(
+    onNavigateToApi: () -> Unit,
+    isMobile: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.then(if (isMobile) Modifier else Modifier.padding(end = 48.dp)),
+        horizontalAlignment = if (isMobile) Alignment.CenterHorizontally else Alignment.Start
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(Res.drawable.vectora_logo),
+                contentDescription = "Vectora Logo",
+                modifier = Modifier.size(if (isMobile) 80.dp else 120.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Vectora",
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = if (isMobile) 64.sp else 110.sp,
+                    brush = Brush.horizontalGradient(
+                        listOf(Color(0xFFBB86FC), Color(0xFF03DAC6))
+                    ),
+                    letterSpacing = (-2).sp
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "The on-device lightning-fast semantic search engine for the next generation of Mobile applications.",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                color = Color.White.copy(alpha = 0.8f),
+                lineHeight = if (isMobile) 32.sp else 36.sp,
+                fontWeight = FontWeight.Light,
+                textAlign = if (isMobile) TextAlign.Center else TextAlign.Start
+            )
+        )
+        Spacer(modifier = Modifier.height(if (isMobile) 32.dp else 48.dp))
+        UseVectoraButton(onClick = onNavigateToApi)
+    }
+}
+
+@Composable
+fun IPhoneFrame(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(360.dp)
             .height(720.dp)
             .border(8.dp, Color(0xFF222222), RoundedCornerShape(48.dp))
