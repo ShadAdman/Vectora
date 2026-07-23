@@ -21,6 +21,7 @@ jobs:
 
       - name: Publish to Maven Central
         run: |
+          chmod +x ./gradlew
           VERSION=${GITHUB_REF#refs/tags/v}
           ./gradlew publishAllPublicationsToMavenCentralRepository -PVERSION_NAME=$VERSION
         env:
