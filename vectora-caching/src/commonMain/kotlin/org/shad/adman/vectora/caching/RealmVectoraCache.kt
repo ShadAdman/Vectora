@@ -2,6 +2,7 @@ package org.shad.adman.vectora.caching
 
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
+import io.realm.kotlin.UpdatePolicy
 import io.realm.kotlin.ext.query
 import io.realm.kotlin.ext.toRealmList
 import org.shad.adman.vectora.caching.model.RealmIndexedItem
@@ -28,7 +29,7 @@ class RealmVectoraCache(
                     id = item.id
                     vectorValues = item.vector.values.toList().toRealmList()
                     metadata = serializer(item.item)
-                })
+                }, updatePolicy = UpdatePolicy.ALL)
             }
         }
     }
@@ -38,7 +39,7 @@ class RealmVectoraCache(
             IndexedItem(
                 id = realmItem.id,
                 item = deserializer(realmItem.metadata),
-                vector = Vector(realmItem.vectorValues.toFloatArray())
+                vector = Vector(realmItem.vectorValues.map { it }.toFloatArray())
             )
         }
     }

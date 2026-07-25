@@ -9,5 +9,5 @@ class RealmIndexedItem : RealmObject {
     @PrimaryKey
     var id: String = ""
     var vectorValues: RealmList<Float> = realmListOf()
-    var metadata: String = "" // Optional metadata or serialized item
+    var metadata: String = ""
 }
