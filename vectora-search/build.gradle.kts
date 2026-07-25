@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -35,7 +36,9 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
             implementation(project(":vectora-engine"))
+            implementation(project(":vectora-caching"))
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
