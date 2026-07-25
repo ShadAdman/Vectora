@@ -63,7 +63,7 @@ fun App() {
 @Composable
 fun HomeScreen(onNavigateToApi: () -> Unit) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val isMobile = maxWidth < 800.dp
+        val isMobile = maxWidth < 700.dp
         
         if (isMobile) {
             Column(
