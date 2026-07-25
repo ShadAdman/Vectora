@@ -12,9 +12,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun BioSection() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = "About Vectora",
