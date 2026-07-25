@@ -63,7 +63,7 @@ fun App() {
 @Composable
 fun HomeScreen(onNavigateToApi: () -> Unit) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val isMobile = maxWidth < 900.dp
+        val isMobile = maxWidth < 800.dp
         
         if (isMobile) {
             Column(
@@ -175,7 +175,7 @@ fun IPhoneFrame(modifier: Modifier = Modifier) {
 
 @Composable
 fun ChatAnimation() {
-    val fullQuery = "hi. give me 2026 nike jordan shoes with blue or black color mixed that are under 200$"
+    val fullQuery = "give me 2026 nike jordan shoes with blue or black color mixed that are under 200$"
     val secondQuery = "Filter them by manufacturing year between 2023 and 2026"
     val thirdQuery = "give me the one that have above 10 percent off"
     
