@@ -15,9 +15,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun UsageSection() {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = "Using VectoraSearch",

@@ -21,58 +21,133 @@ fun ApiSection(onBack: () -> Unit) {
     var selectedSection by remember { mutableStateOf("Bio") }
     val sections = listOf("Bio", "Usage", "Import")
 
-    Row(modifier = Modifier.fillMaxSize()) {
-        // Side Menu
-        Column(
-            modifier = Modifier
-                .width(280.dp)
-                .fillMaxHeight()
-                .background(Color(0xFF0A0A0A))
-                .padding(24.dp)
-        ) {
-            Text(
-                text = "Vectora Doc",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            )
-            
-            Spacer(modifier = Modifier.height(48.dp))
-            
-            sections.forEach { section ->
-                SideMenuItem(
-                    text = section,
-                    isSelected = selectedSection == section,
-                    onClick = { selectedSection = section }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isMobile = maxWidth < 800.dp
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            TextButton(onClick = onBack) {
-                Text("< Back to Home", color = Color(0xFFBB86FC))
-            }
-        }
-
-        // Content Area
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(Color.Black)
-                .verticalScroll(rememberScrollState())
-                .padding(64.dp)
-        ) {
-            Column(modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp)) {
-                when (selectedSection) {
-                    "Bio" -> BioSection()
-                    "Usage" -> UsageSection()
-                    "Import" -> ImportSection()
+        if (isMobile) {
+            Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                // Mobile Top Bar
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF0A0A0A))
+                        .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Vectora Doc",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                        TextButton(onClick = onBack) {
+                            Text("Back", color = Color(0xFFBB86FC))
+                        }
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        sections.forEach { section ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (selectedSection == section) Color(0xFF1A1A1A) else Color.Transparent)
+                                    .clickable { selectedSection = section }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = section,
+                                    color = if (selectedSection == section) Color(0xFFBB86FC) else Color.Gray,
+                                    fontWeight = if (selectedSection == section) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(100.dp))
+
+                // Content Area
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        when (selectedSection) {
+                            "Bio" -> BioSection()
+                            "Usage" -> UsageSection()
+                            "Import" -> ImportSection()
+                        }
+                        Spacer(modifier = Modifier.height(64.dp))
+                    }
+                }
+            }
+        } else {
+            Row(modifier = Modifier.fillMaxSize()) {
+                // Side Menu
+                Column(
+                    modifier = Modifier
+                        .width(280.dp)
+                        .fillMaxHeight()
+                        .background(Color(0xFF0A0A0A))
+                        .padding(24.dp)
+                ) {
+                    Text(
+                        text = "Vectora Doc",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                    
+                    Spacer(modifier = Modifier.height(48.dp))
+                    
+                    sections.forEach { section ->
+                        SideMenuItem(
+                            text = section,
+                            isSelected = selectedSection == section,
+                            onClick = { selectedSection = section }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    TextButton(onClick = onBack) {
+                        Text("< Back to Home", color = Color(0xFFBB86FC))
+                    }
+                }
+
+                // Content Area
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .background(Color.Black)
+                        .verticalScroll(rememberScrollState())
+                        .padding(64.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp)) {
+                        when (selectedSection) {
+                            "Bio" -> BioSection()
+                            "Usage" -> UsageSection()
+                            "Import" -> ImportSection()
+                        }
+                        
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
+                }
             }
         }
     }

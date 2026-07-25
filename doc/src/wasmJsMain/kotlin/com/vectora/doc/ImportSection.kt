@@ -18,9 +18,7 @@ fun ImportSection() {
     val platforms = listOf("Android", "iOS", "KMP")
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 48.dp)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             text = "Importing Vectora",
