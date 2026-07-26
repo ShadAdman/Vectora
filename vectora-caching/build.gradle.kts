@@ -4,12 +4,12 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
-//    alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.realm)
 }
 
 kotlin {
     android {
-       namespace = "org.shad.adman.vectora.cashing"
+       namespace = "org.shad.adman.vectora.caching"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
        compilerOptions {
@@ -22,7 +22,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "VectoraCashing"
+            baseName = "VectoraCaching"
             isStatic = true
         }
     }
@@ -30,14 +30,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
+            implementation(libs.realm.base)
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
     }
 }
-
-//mavenPublishing {
-//    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-//    signAllPublications()
-//}

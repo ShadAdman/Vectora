@@ -30,6 +30,6 @@ dependencyResolutionManagement {
 include(":vectora-core")
 include(":vectora-engine")
 include(":vectora-search")
-include(":vectora-cashing")
+include(":vectora-caching")
 include(":sample-android")
 include(":doc")

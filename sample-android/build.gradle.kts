@@ -15,7 +15,7 @@ dependencies {
     implementation(project(":vectora-core"))
     implementation(project(":vectora-engine"))
     implementation(project(":vectora-search"))
-    implementation(project(":vectora-cashing"))
+    implementation(project(":vectora-caching"))
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.compose.ui)

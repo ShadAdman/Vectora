@@ -4,7 +4,6 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.mavenPublish)
 }
 
 kotlin {
@@ -54,9 +53,4 @@ android {
     sourceSets["main"].apply {
         res.srcDirs("src/androidMain/res", "src/commonMain/resources/res")
     }
-}
-
-mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    signAllPublications()
 }

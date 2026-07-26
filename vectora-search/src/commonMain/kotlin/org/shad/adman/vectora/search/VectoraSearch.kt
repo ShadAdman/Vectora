@@ -6,6 +6,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import org.shad.adman.vectora.caching.RealmVectoraCache
+import org.shad.adman.vectora.caching.VectoraCache
 import org.shad.adman.vectora.core.embedding.EmbeddingEngine
 import org.shad.adman.vectora.core.model.IndexedItem
 import org.shad.adman.vectora.core.model.SearchResult
@@ -16,8 +21,10 @@ import kotlin.random.Random
 /**
  * Public API for Vectora search operations.
  */
-class VectoraSearch<T> private constructor(
-    private val engine: EmbeddingEngine
+class VectoraSearch<T> @PublishedApi internal constructor(
+    private val engine: EmbeddingEngine,
+    private val cache: VectoraCache? = null,
+    private val itemSerializer: KSerializer<T>? = null
 ) : AutoCloseable {
     private val _indexedItems = MutableStateFlow<List<IndexedItem<T>>>(emptyList())
     val indexedItems: StateFlow<List<IndexedItem<T>>> = _indexedItems.asStateFlow()
@@ -26,38 +33,91 @@ class VectoraSearch<T> private constructor(
     val searchResults: SharedFlow<List<SearchResult<T>>> = _searchResults.asSharedFlow()
 
     companion object {
+        private val json = Json { ignoreUnknownKeys = true }
+
         /**
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model.
-         * Automatically loads the model from the engine's resources.
+         * Automatically captures the serializer for [T].
          */
-        fun <T> create(): VectoraSearch<T> {
+        inline fun <reified T> create(enableCache: Boolean = false): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM()
-            return VectoraSearch(engine)
+            val cache = if (enableCache) RealmVectoraCache.create() else null
+            val itemSerializer = if (enableCache) serializer<T>() else null
+            return VectoraSearch(engine, cache, itemSerializer)
         }
 
         /**
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model with provided bytes.
-         * @param modelBytes The raw bytes of the TFLite model.
+         * Automatically captures the serializer for [T].
          */
-        fun <T> create(modelBytes: ByteArray): VectoraSearch<T> {
+        inline fun <reified T> create(modelBytes: ByteArray, enableCache: Boolean = false): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM(modelBytes)
-            return VectoraSearch(engine)
+            val cache = if (enableCache) RealmVectoraCache.create() else null
+            val itemSerializer = if (enableCache) serializer<T>() else null
+            return VectoraSearch(engine, cache, itemSerializer)
         }
 
         /**
          * Creates a [VectoraSearch] instance using a custom [EmbeddingEngine].
+         * Automatically captures the serializer for [T].
          */
-        fun <T> create(engine: EmbeddingEngine): VectoraSearch<T> {
-            return VectoraSearch(engine)
+        inline fun <reified T> create(engine: EmbeddingEngine, enableCache: Boolean = false): VectoraSearch<T> {
+            val cache = if (enableCache) RealmVectoraCache.create() else null
+            val itemSerializer = if (enableCache) serializer<T>() else null
+            return VectoraSearch(engine, cache, itemSerializer)
+        }
+        
+        /**
+         * Internal factory for advanced usage.
+         */
+        @PublishedApi
+        internal fun <T> createInternal(
+            engine: EmbeddingEngine,
+            cache: VectoraCache?,
+            itemSerializer: KSerializer<T>?
+        ): VectoraSearch<T> {
+            return VectoraSearch(engine, cache, itemSerializer)
         }
     }
 
     /**
+     * Loads indexed items from the cache.
+     * @throws IllegalStateException if cache is not enabled.
+     */
+    suspend fun loadFromCache() {
+        val currentCache = cache ?: throw IllegalStateException("Caching is not enabled for this VectoraSearch instance.")
+        val currentSerializer = itemSerializer ?: throw IllegalStateException("Serializer not initialized for this instance.")
+        
+        val items = currentCache.loadItems { metadata ->
+            json.decodeFromString(currentSerializer, metadata)
+        }
+        _indexedItems.value += items
+    }
+
+    /**
+     * Adds already indexed items (e.g. from manual source).
+     */
+    fun addIndexedItems(items: List<IndexedItem<T>>) {
+        _indexedItems.value += items
+    }
+
+    /**
      * Indexes a list of items.
+     *
      * @param items The items to index.
      * @param textExtractor Function to extract searchable text from the item.
+     * @param saveToCache Whether to persist the indexed items to cache.
+     * @throws IllegalStateException if [saveToCache] is true but caching is not enabled.
      */
-    suspend fun index(items: List<T>, textExtractor: (T) -> String) {
+    suspend fun index(
+        items: List<T>,
+        textExtractor: (T) -> String,
+        saveToCache: Boolean = false
+    ) {
+        if (saveToCache && (cache == null || itemSerializer == null)) {
+            throw IllegalStateException("Caching is not enabled or serializer is missing for this VectoraSearch instance.")
+        }
+
         val texts = items.map(textExtractor)
         val vectors = engine.embed(texts)
         val newIndexedItems = items.zip(vectors).map { (item, vector) ->
@@ -68,6 +128,12 @@ class VectoraSearch<T> private constructor(
             )
         }
         _indexedItems.value += newIndexedItems
+
+        if (saveToCache && cache != null && itemSerializer != null) {
+            cache.saveItems(newIndexedItems) { item ->
+                json.encodeToString(itemSerializer, item)
+            }
+        }
     }
 
     /**

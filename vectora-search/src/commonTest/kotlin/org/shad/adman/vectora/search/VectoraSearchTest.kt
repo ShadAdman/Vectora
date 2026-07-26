@@ -2,14 +2,36 @@ package org.shad.adman.vectora.search
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import org.shad.adman.vectora.caching.VectoraCache
 import org.shad.adman.vectora.core.embedding.EmbeddingEngine
+import org.shad.adman.vectora.core.model.IndexedItem
 import org.shad.adman.vectora.core.model.Vector
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class VectoraSearchTest {
 
+    class MockCache : VectoraCache {
+        var savedItems: List<IndexedItem<*>> = emptyList()
+        var clearCalled = false
+
+        override suspend fun <T> saveItems(items: List<IndexedItem<T>>, serializer: (T) -> String) {
+            savedItems = items
+        }
+
+        override suspend fun <T> loadItems(deserializer: (String) -> T): List<IndexedItem<T>> {
+            return emptyList()
+        }
+
+        override suspend fun clear() {
+            clearCalled = true
+        }
+    }
+
+    @Serializable
     data class TestProduct(
         val id: String,
         val name: String,
@@ -55,9 +77,9 @@ class VectoraSearchTest {
         )
 
         // Index like in the sample app
-        search.index(products) { p ->
+        search.index(products, textExtractor = { p ->
             "${p.brand} ${p.name} ${p.description} ${p.category} ${p.color}"
-        }
+        })
 
         assertEquals(2, search.indexedItems.value.size)
 
@@ -94,10 +116,33 @@ class VectoraSearchTest {
             TestProduct(it.toString(), "Product $it", "Description $it", 10.0, "Cat", "Color")
         }
 
-        search.index(products) { it.description }
+        search.index(products, textExtractor = { it.description })
         search.search("query", topK = 5)
 
         val results = search.searchResults.first()
         assertEquals(5, results.size)
+    }
+
+    @Test
+    fun testIndexWithSaveToCache() = runTest {
+        val engine = MockEmbeddingEngine()
+        val cache = MockCache()
+        // Use internal constructor for testing with mock cache
+        val search = VectoraSearch<TestProduct>(engine, cache, TestProduct.serializer())
+
+        val products = listOf(
+            TestProduct("1", "Product 1", "Desc 1", 10.0, "Cat", "Color")
+        )
+
+        search.index(
+            products,
+            textExtractor = { it.description },
+            saveToCache = true
+        )
+
+        assertEquals(1, cache.savedItems.size)
+        val item = (cache.savedItems[0] as IndexedItem<TestProduct>).item
+        assertNotNull(item)
+        assertEquals("Product 1", item.name)
     }
 }
