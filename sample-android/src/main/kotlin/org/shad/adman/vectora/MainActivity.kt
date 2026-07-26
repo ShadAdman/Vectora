@@ -1,5 +1,6 @@
 package org.shad.adman.vectora
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.shad.adman.vectora.core.model.SearchResult
@@ -35,6 +37,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App() {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var searchEngine by remember { mutableStateOf<VectoraSearch<Product>?>(null) }
     var results by remember { mutableStateOf<List<SearchResult<Product>>>(emptyList()) }
@@ -100,7 +103,17 @@ fun App() {
     }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).systemBarsPadding()) {
-        Text(text = status, style = MaterialTheme.typography.bodySmall)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = status, style = MaterialTheme.typography.bodySmall)
+            TextButton(onClick = {
+                context.startActivity(Intent(context, QueryUnderstandingActivity::class.java))
+            }) {
+                Text("Query Understanding Demo")
+            }
+        }
         
         Spacer(modifier = Modifier.height(8.dp))
 

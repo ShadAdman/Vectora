@@ -16,6 +16,7 @@ import org.shad.adman.vectora.core.model.IndexedItem
 import org.shad.adman.vectora.core.model.SearchResult
 import org.shad.adman.vectora.core.util.VectorMath
 import org.shad.adman.vectora.engine.embedding.KFliteEmbeddingEngine
+import org.shad.adman.vectora.query.QueryParser
 import kotlin.random.Random
 
 /**
@@ -34,6 +35,16 @@ class VectoraSearch<T> @PublishedApi internal constructor(
 
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
+        
+        @PublishedApi
+        internal val queryParser = QueryParser()
+
+        /**
+         * Parses a natural language query and populates a generic consumer-defined schema.
+         */
+        inline fun <reified T> parseQuery(query: String, schema: T): T {
+            return queryParser.parse(query, schema)
+        }
 
         /**
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model.
@@ -111,9 +122,9 @@ class VectoraSearch<T> @PublishedApi internal constructor(
      */
     suspend fun index(
         items: List<T>,
-        textExtractor: (T) -> String,
-        saveToCache: Boolean = false
-    ) {
+        saveToCache: Boolean = false,
+        textExtractor: (T) -> String
+        ) {
         if (saveToCache && (cache == null || itemSerializer == null)) {
             throw IllegalStateException("Caching is not enabled or serializer is missing for this VectoraSearch instance.")
         }
