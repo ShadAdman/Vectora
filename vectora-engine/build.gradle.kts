@@ -21,7 +21,7 @@ kotlin {
         homepage = "https://github.com/ShadAdman/vectora"
         version = "1.0"
         ios.deploymentTarget = "17.0"
-//        podfile = project.file("../sample/iosApp/Podfile")
+        podfile = project.file("../sample-ios/iosApp/Podfile")
 
         pod("TensorFlowLiteObjC", moduleName = "TFLTensorFlowLite")
         pod("TensorFlowLiteObjC/Metal") { linkOnly = true }
@@ -30,10 +30,10 @@ kotlin {
         framework {
             baseName = "VectoraEngine"
             isStatic = true
-//            linkerOpts(
-//                project.file("../sample/iosApp/Pods/TensorFlowLiteObjC/Frameworks").path.let { "-F$it" },
-//                "-framework", "TensorFlowLiteObjC"
-//            )
+            linkerOpts(
+                project.file("../sample-ios/iosApp/Pods/TensorFlowLiteObjC/Frameworks").path.let { "-F$it" },
+                "-framework", "TensorFlowLiteObjC"
+            )
         }
     }
 
