@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -34,6 +35,12 @@ kotlin {
                 project.file("../sample-ios/iosApp/Pods/TensorFlowLiteObjC/Frameworks").path.let { "-F$it" },
                 "-framework", "TensorFlowLiteObjC"
             )
+        }
+    }
+
+    targets.withType<KotlinNativeTarget>().all {
+        compilations.getByName("main").cinterops.all {
+            compilerOpts("-fno-modules-validate-system-headers")
         }
     }
 
