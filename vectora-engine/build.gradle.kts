@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinCocoapods)
 }
 
 kotlin {
@@ -12,14 +13,27 @@ kotlin {
            jvmTarget = JvmTarget.JVM_17
        }
     }
-    
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
+
+    iosArm64(); iosSimulatorArm64()
+
+    cocoapods {
+        summary = "Core abstractions and native dependencies for Vectora"
+        homepage = "https://github.com/ShadAdman/vectora"
+        version = "1.0"
+        ios.deploymentTarget = "17.0"
+//        podfile = project.file("../sample/iosApp/Podfile")
+
+        pod("TensorFlowLiteObjC", moduleName = "TFLTensorFlowLite")
+        pod("TensorFlowLiteObjC/Metal") { linkOnly = true }
+        pod("TensorFlowLiteObjC/CoreML") { linkOnly = true }
+
+        framework {
             baseName = "VectoraEngine"
             isStatic = true
+//            linkerOpts(
+//                project.file("../sample/iosApp/Pods/TensorFlowLiteObjC/Frameworks").path.let { "-F$it" },
+//                "-framework", "TensorFlowLiteObjC"
+//            )
         }
     }
 
