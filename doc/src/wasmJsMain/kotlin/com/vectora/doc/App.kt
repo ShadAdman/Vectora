@@ -177,7 +177,6 @@ fun IPhoneFrame(modifier: Modifier = Modifier) {
 fun ChatAnimation() {
     val fullQuery = "give me 2026 nike jordan shoes with blue or black color mixed that are under 200$"
     val secondQuery = "Filter them by manufacturing year between 2023 and 2026"
-    val thirdQuery = "give me the one that have above 10 percent off"
     val fourthQuery = "blue nike shoes under 10 dollers"
     
     var displayedQuery by remember { mutableStateOf("") }
@@ -187,10 +186,6 @@ fun ChatAnimation() {
     var displayedSecondQuery by remember { mutableStateOf("") }
     var isSecondSent by remember { mutableStateOf(false) }
     var showSecondResults by remember { mutableStateOf(false) }
-
-    var displayedThirdQuery by remember { mutableStateOf("") }
-    var isThirdSent by remember { mutableStateOf(false) }
-    var showThirdResults by remember { mutableStateOf(false) }
 
     var displayedFourthQuery by remember { mutableStateOf("") }
     var isFourthSent by remember { mutableStateOf(false) }
@@ -255,57 +250,43 @@ fun ChatAnimation() {
             displayedSecondQuery = ""
             isSecondSent = false
             showSecondResults = false
-            displayedThirdQuery = ""
-            isThirdSent = false
-            showThirdResults = false
             displayedFourthQuery = ""
             isFourthSent = false
             showFourthResults = false
-            delay(1500)
+            delay(1000)
 
             // Typing first query
             fullQuery.forEach { char ->
                 displayedQuery += char
-                delay(40)
+                delay(30)
             }
-            delay(800)
+            delay(400)
             isSent = true
-            delay(600)
+            delay(300)
             showResults = true
-            delay(4000)
+            delay(2500)
 
             // Typing second query
             secondQuery.forEach { char ->
                 displayedSecondQuery += char
-                delay(40)
+                delay(30)
             }
-            delay(800)
+            delay(400)
             isSecondSent = true
-            delay(600)
+            delay(300)
             showSecondResults = true
-            delay(4000)
-
-            // Typing third query
-            thirdQuery.forEach { char ->
-                displayedThirdQuery += char
-                delay(40)
-            }
-            delay(800)
-            isThirdSent = true
-            delay(600)
-            showThirdResults = true
-            delay(4000)
+            delay(2500)
 
             // Typing fourth query
             fourthQuery.forEach { char ->
                 displayedFourthQuery += char
-                delay(40)
+                delay(30)
             }
-            delay(800)
+            delay(400)
             isFourthSent = true
-            delay(600)
+            delay(300)
             showFourthResults = true
-            delay(8000)
+            delay(5000)
         }
     }
 
@@ -322,7 +303,6 @@ fun ChatAnimation() {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val inputText = when {
                     displayedFourthQuery.isNotEmpty() || isFourthSent -> displayedFourthQuery
-                    displayedThirdQuery.isNotEmpty() || isThirdSent -> displayedThirdQuery
                     displayedSecondQuery.isNotEmpty() || isSecondSent -> displayedSecondQuery
                     else -> displayedQuery
                 }
@@ -336,7 +316,7 @@ fun ChatAnimation() {
                 Icon(
                     Icons.Default.Search,
                     contentDescription = "Search",
-                    tint = if (isThirdSent || (isSecondSent && !showThirdResults && displayedThirdQuery.isEmpty())) Color(0xFFBB86FC) else Color.Gray.copy(alpha = 0.5f),
+                    tint = if (isFourthSent || (isSecondSent && !showFourthResults && displayedFourthQuery.isEmpty())) Color(0xFFBB86FC) else Color.Gray.copy(alpha = 0.5f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -364,12 +344,6 @@ fun ChatAnimation() {
                             """.trimIndent(),
                             language = "json"
                         )
-                    }
-                } else if (showThirdResults) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ProductGrid(productsDiscounted)
-                        }
                     }
                 } else if (showSecondResults) {
                     Column(modifier = Modifier.fillMaxSize()) {
