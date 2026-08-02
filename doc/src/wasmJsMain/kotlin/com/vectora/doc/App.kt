@@ -178,6 +178,7 @@ fun ChatAnimation() {
     val fullQuery = "give me 2026 nike jordan shoes with blue or black color mixed that are under 200$"
     val secondQuery = "Filter them by manufacturing year between 2023 and 2026"
     val thirdQuery = "give me the one that have above 10 percent off"
+    val fourthQuery = "blue nike shoes under 10 dollers"
     
     var displayedQuery by remember { mutableStateOf("") }
     var isSent by remember { mutableStateOf(false) }
@@ -190,6 +191,10 @@ fun ChatAnimation() {
     var displayedThirdQuery by remember { mutableStateOf("") }
     var isThirdSent by remember { mutableStateOf(false) }
     var showThirdResults by remember { mutableStateOf(false) }
+
+    var displayedFourthQuery by remember { mutableStateOf("") }
+    var isFourthSent by remember { mutableStateOf(false) }
+    var showFourthResults by remember { mutableStateOf(false) }
 
     val products2026 = remember {
         listOf(
@@ -253,6 +258,9 @@ fun ChatAnimation() {
             displayedThirdQuery = ""
             isThirdSent = false
             showThirdResults = false
+            displayedFourthQuery = ""
+            isFourthSent = false
+            showFourthResults = false
             delay(1500)
 
             // Typing first query
@@ -286,6 +294,17 @@ fun ChatAnimation() {
             isThirdSent = true
             delay(600)
             showThirdResults = true
+            delay(4000)
+
+            // Typing fourth query
+            fourthQuery.forEach { char ->
+                displayedFourthQuery += char
+                delay(40)
+            }
+            delay(800)
+            isFourthSent = true
+            delay(600)
+            showFourthResults = true
             delay(8000)
         }
     }
@@ -302,6 +321,7 @@ fun ChatAnimation() {
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val inputText = when {
+                    displayedFourthQuery.isNotEmpty() || isFourthSent -> displayedFourthQuery
                     displayedThirdQuery.isNotEmpty() || isThirdSent -> displayedThirdQuery
                     displayedSecondQuery.isNotEmpty() || isSecondSent -> displayedSecondQuery
                     else -> displayedQuery
@@ -325,7 +345,27 @@ fun ChatAnimation() {
         // Chat History (Results only)
         Box(modifier = Modifier.weight(1f).padding(horizontal = 16.dp)) {
             Column(modifier = Modifier.fillMaxSize().padding(vertical = 16.dp)) {
-                if (showThirdResults) {
+                if (showFourthResults) {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            "Exported Query Schema:",
+                            color = Color.Gray,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        CodeBlock(
+                            """
+                            {
+                              "brand": "nike",
+                              "color": "blue",
+                              "maxPrice": 10.0
+                            }
+                            """.trimIndent(),
+                            language = "json"
+                        )
+                    }
+                } else if (showThirdResults) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         Box(modifier = Modifier.weight(1f)) {
                             ProductGrid(productsDiscounted)
