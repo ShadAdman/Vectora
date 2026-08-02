@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ApiSection(onBack: () -> Unit) {
     var selectedSection by remember { mutableStateOf("Bio") }
-    val sections = listOf("Bio", "Usage", "Import")
+    val sections = listOf("Bio", "Usage", "Query Export", "Import")
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isMobile = maxWidth < 800.dp
@@ -87,6 +87,7 @@ fun ApiSection(onBack: () -> Unit) {
                         when (selectedSection) {
                             "Bio" -> BioSection()
                             "Usage" -> SearchUsageSection()
+                            "Query Export" -> QueryExportUsageSection()
                             "Import" -> ImportSection()
                         }
                         Spacer(modifier = Modifier.height(64.dp))
@@ -142,6 +143,7 @@ fun ApiSection(onBack: () -> Unit) {
                         when (selectedSection) {
                             "Bio" -> BioSection()
                             "Usage" -> SearchUsageSection()
+                            "Query Export" -> QueryExportUsageSection()
                             "Import" -> ImportSection()
                         }
                         

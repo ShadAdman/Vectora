@@ -10,12 +10,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SearchUsageSection() {
+fun QueryExportUsageSection() {
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
-            text = "Using VectoraSearch",
+            text = "Using VectoraSearch.parseQuery()",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFBB86FC)
@@ -24,16 +24,16 @@ fun SearchUsageSection() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Indexing is the process of converting your data into high-dimensional vectors (embeddings) that represent the semantic meaning of the text. This allows Vectora to perform lightning-fast similarity searches based on intent rather than just keywords.",
+            text = "With the ability to parse a query into your desired schema, you can make your search section more efficient and save a lot of time and energy in your server.",
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 16.sp,
             lineHeight = 24.sp
         )
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         Text(
-            text = "Vectora is highly optimized for mobile devices. indexing 1000 products/items/models typically takes only a few milliseconds, making it suitable for real-time local updates and an excellent user experience.",
+            text = "Using this feature you can talk and send search query to your server from semantic queries.",
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 16.sp,
             lineHeight = 24.sp
@@ -42,17 +42,24 @@ fun SearchUsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "1. Your Data Model Example",
+            text = "1. Your Schema Example",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Define a data class that represents the filters or parameters you want to extract from a natural language query. Make sure it's annotated with @Serializable.",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            data class Product(
-                val id: String,
-                val name: String,
-                val description: String,
-                val price: Double
+            @Serializable
+            data class ProductFilters(
+                val brand: String = "",
+                val color: String = "",
+                val minPrice: Double = 0.0,
+                val maxPrice: Double = 0.0
             )
             """.trimIndent()
         )
@@ -60,49 +67,51 @@ fun SearchUsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "2. Initialize and Index",
+            text = "2. Parse Natural Language",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "The 'products' variable is a simple List<Product> containing your application data. This can be any list of your items or data that comes from remote or your local database. If you do the indexing before sending your users to search section, it makes the search ux very smooth and blazingly fast",
+            text = "Use VectoraSearch.parseQuery() to convert a natural language string into your schema. This is useful for building advanced filter UIs or sending structured data to your backend.",
             color = Color.White.copy(alpha = 0.6f),
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            // Create instance with MiniLM model
+            val query = "blue nike shoes under 150 dollars"
             
-            val vectora = VectoraSearch.create<Product>()
-
-            // Index your list of products
-            // The lambda defines which fields are used for semantic search
+            // Vectora extracts the relevant information into your object
+            val filters = VectoraSearch.parseQuery(query, ProductFilters())
             
-            vectora.index(products) { it.name + " " + it.description + " " + it.price }
+            println(filters.brand)    // "nike"
+            println(filters.color)    // "blue"
+            println(filters.maxPrice) // 150.0
             """.trimIndent()
         )
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "3. Search and Observe",
+            text = "3. Use with Search",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "You can combine semantic search with structured filters for the most accurate results.",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            // Search with natural language
-            
-            vectora.search("lightweight running shoes for marathon under 150")
+            // Perform semantic search
+            vectora.search(query)
 
-            // Collect results in your UI
-            
+            // Further refine results using parsed filters
             vectora.searchResults.collect { results ->
-                // results is a list of SearchResult<Product> containing 
-                // the original item and its similarity `score`
-                
-                adapter.submitList(results.map { it.item })
+                val filtered = results.filter { it.item.price <= filters.maxPrice }
+                updateUi(filtered)
             }
             """.trimIndent()
         )
