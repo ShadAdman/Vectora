@@ -86,7 +86,7 @@ fun ApiSection(onBack: () -> Unit) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         when (selectedSection) {
                             "Bio" -> BioSection()
-                            "Usage" -> UsageSection()
+                            "Usage" -> SearchUsageSection()
                             "Import" -> ImportSection()
                         }
                         Spacer(modifier = Modifier.height(64.dp))
@@ -141,7 +141,7 @@ fun ApiSection(onBack: () -> Unit) {
                     Column(modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp)) {
                         when (selectedSection) {
                             "Bio" -> BioSection()
-                            "Usage" -> UsageSection()
+                            "Usage" -> SearchUsageSection()
                             "Import" -> ImportSection()
                         }
                         
