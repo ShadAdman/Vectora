@@ -17,6 +17,7 @@ import org.shad.adman.vectora.core.model.SearchResult
 import org.shad.adman.vectora.core.util.VectorMath
 import org.shad.adman.vectora.engine.embedding.KFliteEmbeddingEngine
 import org.shad.adman.vectora.query.QueryParser
+import kotlin.math.ceil
 import kotlin.random.Random
 
 /**
@@ -32,6 +33,9 @@ class VectoraSearch<T> @PublishedApi internal constructor(
 
     private val _searchResults = MutableSharedFlow<List<SearchResult<T>>>()
     val searchResults: SharedFlow<List<SearchResult<T>>> = _searchResults.asSharedFlow()
+
+    private val _indexingProgress = MutableSharedFlow<Float>()
+    val indexingProgress: SharedFlow<Float> = _indexingProgress.asSharedFlow()
 
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -123,25 +127,41 @@ class VectoraSearch<T> @PublishedApi internal constructor(
     suspend fun index(
         items: List<T>,
         saveToCache: Boolean = false,
+        chunkSize: Int = 100,
         textExtractor: (T) -> String
-        ) {
+    ) {
         if (saveToCache && (cache == null || itemSerializer == null)) {
             throw IllegalStateException("Caching is not enabled or serializer is missing for this VectoraSearch instance.")
         }
 
-        val texts = items.map(textExtractor)
-        val vectors = engine.embed(texts)
-        val newIndexedItems = items.zip(vectors).map { (item, vector) ->
-            IndexedItem(
-                id = Random.nextLong().toString(),
-                item = item,
-                vector = vector
-            )
+        val totalItems = items.size
+        if (totalItems == 0) {
+            _indexingProgress.emit(100f)
+            return
         }
-        _indexedItems.value += newIndexedItems
+
+        val allNewIndexedItems = mutableListOf<IndexedItem<T>>()
+        
+        items.chunked(chunkSize).forEachIndexed { index, chunk ->
+            val texts = chunk.map(textExtractor)
+            val vectors = engine.embed(texts)
+            val newIndexedItems = chunk.zip(vectors).map { (item, vector) ->
+                IndexedItem(
+                    id = Random.nextLong().toString(),
+                    item = item,
+                    vector = vector
+                )
+            }
+            allNewIndexedItems.addAll(newIndexedItems)
+            
+            val progress = ((index + 1).toFloat() / (totalItems.toFloat() / chunkSize.toFloat()).let { ceil(it) }) * 100f
+            _indexingProgress.emit(progress.coerceAtMost(100f))
+        }
+
+        _indexedItems.value += allNewIndexedItems
 
         if (saveToCache && cache != null && itemSerializer != null) {
-            cache.saveItems(newIndexedItems) { item ->
+            cache.saveItems(allNewIndexedItems) { item ->
                 json.encodeToString(itemSerializer, item)
             }
         }
