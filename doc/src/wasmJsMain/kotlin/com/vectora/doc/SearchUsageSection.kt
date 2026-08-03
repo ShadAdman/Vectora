@@ -90,11 +90,17 @@ fun SearchUsageSection() {
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Perform a search by passing a natural language query. You can also specify 'topK' to limit the number of results returned (defaults to 10).",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            // Search with natural language
+            // Search with natural language and optional topK
             
-            vectora.search("lightweight running shoes for marathon under 150")
+            vectora.search("lightweight running shoes", topK = 5)
 
             // Collect results in your UI
             

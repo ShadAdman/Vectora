@@ -24,7 +24,7 @@ fun QueryExportUsageSection() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "With the ability to parse a query into your desired schema, you can make your search section more efficient and save a lot of time and energy in your server.",
+            text = "Query Export enables backend-assisted search by bridging the gap between natural language and structured parameters. By defining a shared schema between your client and backend, Vectora populates it locally, allowing you to send precise, structured requests to your server.",
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 16.sp,
             lineHeight = 24.sp
@@ -33,7 +33,7 @@ fun QueryExportUsageSection() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Using this feature you can talk and send search query to your server from semantic queries.",
+            text = "This approach reduces server-side complexity and latency by handling the semantic extraction on-device, ensuring your backend receives exactly the filters it needs to process the search efficiently.",
             color = Color.White.copy(alpha = 0.8f),
             fontSize = 16.sp,
             lineHeight = 24.sp
@@ -93,25 +93,29 @@ fun QueryExportUsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "3. Use with Search",
+            text = "3. Send to Backend",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "You can combine semantic search with structured filters for the most accurate results.",
+            text = "Once Vectora has filled your schema, you can send the structured object directly to your backend API. This combines the power of client-side semantic extraction with your existing server-side business logic.",
             color = Color.White.copy(alpha = 0.6f),
             fontSize = 14.sp
         )
         Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            // Perform semantic search
-            vectora.search(query)
+            // Perform extraction
+            val filters = VectoraSearch.parseQuery(userInput, ProductFilters())
 
-            // Further refine results using parsed filters
-            vectora.searchResults.collect { results ->
-                val filtered = results.filter { it.item.price <= filters.maxPrice }
-                updateUi(filtered)
+            // Send to your backend API
+            viewModelScope.launch {
+                val results = repository.fetchProducts(
+                    brand = filters.brand,
+                    color = filters.color,
+                    maxPrice = filters.maxPrice
+                )
+                _uiState.value = results
             }
             """.trimIndent()
         )
