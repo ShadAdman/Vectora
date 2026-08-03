@@ -86,7 +86,41 @@ fun SearchUsageSection() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            text = "3. Search and Observe",
+            text = "3. Track Indexing Progress",
+            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "For very large datasets, you can observe the indexing progress in real-time. Although Vectora is blazingly fast, this is useful for providing feedback during initial data loads or large updates.",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "The 'chunkSize' parameter (default: 100) controls how many items are processed in each batch. A smaller chunkSize gives you more frequent progress updates, while a larger chunkSize can be more efficient for processing very large lists in bulk.",
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 14.sp
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        CodeBlock(
+            """
+            // Observe indexing progress (0% to 100%)
+            
+            vectora.indexingProgress.collect { progress ->
+                progressBar.setProgress(progress.toInt())
+                statusText.text = "Indexing: ${'$'}progress%"
+            }
+
+            // You can also specify a chunkSize for more granular updates
+            
+            vectora.index(largeDataset, chunkSize = 50) { it.toSearchableText() }
+            """.trimIndent()
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "4. Search and Observe",
             style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
         )
         Spacer(modifier = Modifier.height(12.dp))
