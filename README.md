@@ -59,8 +59,7 @@ data class Product(
 val vectora = VectoraSearch.create<Product>()
 
 // Index your items
-// chunkSize (default 100) controls progress granularity
-vectora.index(products, chunkSize = 50) { it.name + " " + it.description }
+vectora.index(products) { it.name + " " + it.description }
 ```
 
 ### 3. Perform Semantic Search
