@@ -58,11 +58,6 @@ data class Product(
 // Create a VectoraSearch instance
 val vectora = VectoraSearch.create<Product>()
 
-// Observe indexing progress
-vectora.indexingProgress.collect { progress ->
-    println("Indexing: $progress%")
-}
-
 // Index your items
 // chunkSize (default 100) controls progress granularity
 vectora.index(products, chunkSize = 50) { it.name + " " + it.description }
