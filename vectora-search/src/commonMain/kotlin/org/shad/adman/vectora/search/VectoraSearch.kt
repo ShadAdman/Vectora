@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import org.shad.adman.vectora.caching.RealmVectoraCache
-import org.shad.adman.vectora.caching.VectoraCache
+import org.shad.adman.vectora.core.cache.VectoraCache
 import org.shad.adman.vectora.core.embedding.EmbeddingEngine
+import org.shad.adman.vectora.core.embedding.NormalizedEmbeddingEngine
 import org.shad.adman.vectora.core.model.IndexedItem
 import org.shad.adman.vectora.core.model.SearchResult
 import org.shad.adman.vectora.core.util.VectorMath
@@ -49,11 +49,18 @@ class VectoraSearch<T> @PublishedApi internal constructor(
         /**
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model.
          * Automatically captures the serializer for [T].
+         *
+         * Persistence is opt-in: pass a [VectoraCache] implementation (e.g.
+         * RealmVectoraCache from vectora-caching) to enable it.
          */
-        inline fun <reified T> create(enableCache: Boolean = false): VectoraSearch<T> {
+        @Deprecated(
+            "Defaults to the deprecated KFlite backend (global-singleton runtime, truncated vocab). " +
+                "Pass a SkaiNetEmbeddingEngine from vectora-engine-skainet via create(engine = ...) instead."
+        )
+        @Suppress("DEPRECATION")
+        inline fun <reified T> create(cache: VectoraCache? = null): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM()
-            val cache = if (enableCache) RealmVectoraCache.create() else null
-            val itemSerializer = if (enableCache) serializer<T>() else null
+            val itemSerializer = if (cache != null) serializer<T>() else null
             return VectoraSearch(engine, cache, itemSerializer)
         }
 
@@ -61,10 +68,14 @@ class VectoraSearch<T> @PublishedApi internal constructor(
          * Creates a [VectoraSearch] instance using the all-MiniLM-L6-v2 model with provided bytes.
          * Automatically captures the serializer for [T].
          */
-        inline fun <reified T> create(modelBytes: ByteArray, enableCache: Boolean = false): VectoraSearch<T> {
+        @Deprecated(
+            "Defaults to the deprecated KFlite backend (global-singleton runtime, truncated vocab). " +
+                "Pass a SkaiNetEmbeddingEngine from vectora-engine-skainet via create(engine = ...) instead."
+        )
+        @Suppress("DEPRECATION")
+        inline fun <reified T> create(modelBytes: ByteArray, cache: VectoraCache? = null): VectoraSearch<T> {
             val engine = KFliteEmbeddingEngine.createMiniLM(modelBytes)
-            val cache = if (enableCache) RealmVectoraCache.create() else null
-            val itemSerializer = if (enableCache) serializer<T>() else null
+            val itemSerializer = if (cache != null) serializer<T>() else null
             return VectoraSearch(engine, cache, itemSerializer)
         }
 
@@ -72,9 +83,8 @@ class VectoraSearch<T> @PublishedApi internal constructor(
          * Creates a [VectoraSearch] instance using a custom [EmbeddingEngine].
          * Automatically captures the serializer for [T].
          */
-        inline fun <reified T> create(engine: EmbeddingEngine, enableCache: Boolean = false): VectoraSearch<T> {
-            val cache = if (enableCache) RealmVectoraCache.create() else null
-            val itemSerializer = if (enableCache) serializer<T>() else null
+        inline fun <reified T> create(engine: EmbeddingEngine, cache: VectoraCache? = null): VectoraSearch<T> {
+            val itemSerializer = if (cache != null) serializer<T>() else null
             return VectoraSearch(engine, cache, itemSerializer)
         }
         
@@ -154,13 +164,16 @@ class VectoraSearch<T> @PublishedApi internal constructor(
      */
     suspend fun search(query: String, topK: Int = 10) {
         val queryVector = engine.embed(query)
+        // Normalized engines guarantee unit vectors, where cosine == dot product.
+        val score: (IndexedItem<T>) -> Float = if (engine is NormalizedEmbeddingEngine) {
+            { VectorMath.dotProduct(queryVector, it.vector) }
+        } else {
+            { VectorMath.cosineSimilarity(queryVector, it.vector) }
+        }
         val results = _indexedItems.value.map { indexedItem: IndexedItem<T> ->
-            SearchResult(
-                item = indexedItem.item,
-                score = VectorMath.cosineSimilarity(queryVector, indexedItem.vector)
-            )
+            SearchResult(item = indexedItem.item, score = score(indexedItem))
         }.sortedByDescending { it.score }.take(topK)
-        
+
         _searchResults.emit(results)
     }
 

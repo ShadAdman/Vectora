@@ -17,3 +17,6 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# Large model weights are fetched, not committed (see vectora-skainet-migration/fetch-minilm-assets.sh)
+sample-android/src/main/assets/minilm/model.safetensors
