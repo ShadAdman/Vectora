@@ -36,7 +36,6 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":vectora-core"))
             implementation(project(":vectora-engine"))
-            implementation(project(":vectora-caching"))
             implementation(project(":vectora-query"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
@@ -50,5 +49,5 @@ kotlin {
 
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    signAllPublications()
+    if (project.findProperty("RELEASE_SIGNING_ENABLED") != "false") signAllPublications()
 }

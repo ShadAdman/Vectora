@@ -72,13 +72,22 @@ fun SearchUsageSection() {
         Spacer(modifier = Modifier.height(8.dp))
         CodeBlock(
             """
-            // Create instance with MiniLM model
-            
-            val vectora = VectoraSearch.create<Product>()
+            // Create an instance with the SKaiNET engine (recommended):
+            // pure-Kotlin BERT runtime, full vocab, L2-normalized vectors.
+            // Model weights: all-MiniLM-L6-v2 safetensors + config.json + vocab.txt
+
+            val engine = SkaiNetEmbeddingEngine.create(
+                model = AndroidAssets.loadSafeTensors(context),   // or any ModelSource
+                vocabText = AndroidAssets.loadVocab(context),
+            )
+            val vectora = VectoraSearch.create<Product>(engine = engine)
+
+            // (Legacy) zero-arg create() still works but is deprecated —
+            // it uses the KFlite/TFLite backend.
 
             // Index your list of products
             // The lambda defines which fields are used for semantic search
-            
+
             vectora.index(products) { it.name + " " + it.description + " " + it.price }
             """.trimIndent()
         )

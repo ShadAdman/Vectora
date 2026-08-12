@@ -2,6 +2,7 @@ package org.shad.adman.vectora
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +16,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.shad.adman.vectora.core.model.SearchResult
+import org.shad.adman.vectora.engine.skainet.AndroidAssets
+import org.shad.adman.vectora.engine.skainet.SkaiNetEmbeddingEngine
 import org.shad.adman.vectora.search.VectoraSearch
+
+enum class EngineChoice { SKAINET, KFLITE }
+
+/**
+ * The 87 MB model.safetensors is not always bundled (emulators can lack the
+ * disk for a 150 MB APK). Falls back to the app's external files dir, fed via:
+ * adb push model.safetensors /sdcard/Android/data/org.shad.adman.vectora/files/minilm/
+ */
+private suspend fun loadMiniLmModel(context: android.content.Context): org.shad.adman.vectora.engine.skainet.ModelSource.SafeTensors {
+    val external = java.io.File(context.getExternalFilesDir(null), "minilm/model.safetensors")
+    return if (external.exists()) {
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            org.shad.adman.vectora.engine.skainet.ModelSource.SafeTensors(
+                model = external.readBytes(),
+                configJson = context.assets.open("minilm/config.json").use { it.readBytes().decodeToString() },
+                poolingConfigJson = context.assets.open("minilm/pooling_config.json").use { it.readBytes().decodeToString() },
+            )
+        }
+    } else {
+        AndroidAssets.loadSafeTensors(context)
+    }
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +69,8 @@ fun App() {
     var query by remember { mutableStateOf("hi. give me a list of your best nike shoes that are in black color") }
     var isReady by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("Initializing...") }
+    var engineChoice by remember { mutableStateOf(EngineChoice.SKAINET) }
+    var timings by remember { mutableStateOf("") }
 
     val products = remember {
         listOf(
@@ -80,18 +107,38 @@ fun App() {
         )
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(engineChoice) {
         try {
-            status = "Loading model..."
-            val search = VectoraSearch.create<Product>()
-            
+            isReady = false
+            results = emptyList()
+            searchEngine?.close()
+            searchEngine = null
+
+            status = "Loading model ($engineChoice)..."
+            val loadStart = SystemClock.elapsedRealtime()
+            val search = when (engineChoice) {
+                EngineChoice.KFLITE -> VectoraSearch.create<Product>()
+                EngineChoice.SKAINET -> VectoraSearch.create<Product>(
+                    engine = SkaiNetEmbeddingEngine.create(
+                        model = loadMiniLmModel(context),
+                        vocabText = AndroidAssets.loadVocab(context),
+                    )
+                )
+            }
+            val loadMs = SystemClock.elapsedRealtime() - loadStart
+
             status = "Indexing products..."
+            val indexStart = SystemClock.elapsedRealtime()
             search.index(products) { p ->
                 "${p.brand} ${p.name} ${p.description} ${p.category} ${p.color}"
             }
+            val indexMs = SystemClock.elapsedRealtime() - indexStart
+            timings = "load ${loadMs}ms · index ${products.size} items ${indexMs}ms " +
+                "(${"%.1f".format(indexMs / products.size.toFloat())}ms/item)"
+
             searchEngine = search
             isReady = true
-            status = "Ready"
+            status = "Ready ($engineChoice)"
 
             search.searchResults.collect { searchResults: List<SearchResult<Product>> ->
                 results = searchResults
@@ -115,6 +162,21 @@ fun App() {
             }
         }
         
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            EngineChoice.entries.forEach { choice ->
+                FilterChip(
+                    selected = engineChoice == choice,
+                    onClick = { engineChoice = choice },
+                    label = { Text(choice.name) }
+                )
+            }
+        }
+        if (timings.isNotEmpty()) {
+            Text(text = timings, style = MaterialTheme.typography.bodySmall)
+        }
+
         Spacer(modifier = Modifier.height(8.dp))
 
         TextField(

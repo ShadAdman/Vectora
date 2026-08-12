@@ -22,17 +22,25 @@ class KFliteEmbeddingEngine(
 ) : EmbeddingEngine, AutoCloseable {
 
     companion object {
+        private const val DEPRECATION =
+            "Superseded by SkaiNetEmbeddingEngine (vectora-engine-skainet): the KFlite backend " +
+                "wraps a process-global singleton (one model per process, close() affects all users), " +
+                "ships a truncated 4,338-entry vocab, and strips non-ASCII text before tokenization."
+
+        @Deprecated(DEPRECATION)
         fun createMiniLM(): KFliteEmbeddingEngine {
             val modelBytes = ModelLoader.loadModel()
             val vocab = ModelLoader.loadVocab()
             return createMiniLM(modelBytes, vocab)
         }
 
+        @Deprecated(DEPRECATION)
         fun createMiniLM(modelBytes: ByteArray): KFliteEmbeddingEngine {
             val vocab = ModelLoader.loadVocab()
             return createMiniLM(modelBytes, vocab)
         }
 
+        @Deprecated(DEPRECATION)
         fun createMiniLM(modelBytes: ByteArray, vocab: List<String>): KFliteEmbeddingEngine {
             val basePreprocessor = MiniLMPreprocessor(vocab)
             val preprocessor = TextCleaningPreprocessor(basePreprocessor)
