@@ -24,15 +24,20 @@ enum class EngineChoice { SKAINET, KFLITE }
 
 /**
  * The 87 MB model.safetensors is not always bundled (emulators can lack the
- * disk for a 150 MB APK). Falls back to the app's external files dir, fed via:
- * adb push model.safetensors /sdcard/Android/data/org.shad.adman.vectora/files/minilm/
+ * disk for a 150 MB APK). Falls back to the app's internal files dir, fed via:
+ * adb push model.safetensors /data/local/tmp/model.safetensors
+ * adb shell run-as org.shad.adman.vectora sh -c 'mkdir -p files/minilm && cp /data/local/tmp/model.safetensors files/minilm/'
+ * (external storage is deliberately not used here — adb-created directories
+ * under Android/data/<pkg>/ hit scoped-storage/FUSE permission checks that
+ * reject them even when raw unix permissions look fine; internal storage via
+ * run-as sidesteps that entirely.)
  */
 private suspend fun loadMiniLmModel(context: android.content.Context): org.shad.adman.vectora.engine.skainet.ModelSource.SafeTensors {
-    val external = java.io.File(context.getExternalFilesDir(null), "minilm/model.safetensors")
-    return if (external.exists()) {
+    val internal = java.io.File(context.filesDir, "minilm/model.safetensors")
+    return if (internal.exists()) {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             org.shad.adman.vectora.engine.skainet.ModelSource.SafeTensors(
-                model = external.readBytes(),
+                model = internal.readBytes(),
                 configJson = context.assets.open("minilm/config.json").use { it.readBytes().decodeToString() },
                 poolingConfigJson = context.assets.open("minilm/pooling_config.json").use { it.readBytes().decodeToString() },
             )
