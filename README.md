@@ -1,5 +1,7 @@
 # Vectora
 
+![Vectora Intro](./intro.gif)
+
 **The on-device lightning-fast semantic search engine for the next generation of Mobile applications.**
 
 Vectora is a Kotlin Multiplatform (KMP) library that brings high-performance semantic search directly to your mobile devices. By leveraging on-device embeddings (MiniLM), Vectora allows you to perform intent-based searches that go far beyond simple keyword matching, all while keeping user data private and ensuring sub-millisecond response times.

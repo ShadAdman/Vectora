@@ -3,7 +3,12 @@ package org.shad.adman.vectora.engine.embedding
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
-import platform.Foundation.*
+import platform.Foundation.NSBundle
+import platform.Foundation.NSData
+import platform.Foundation.NSString
+import platform.Foundation.NSUTF8StringEncoding
+import platform.Foundation.dataWithContentsOfFile
+import platform.Foundation.stringWithContentsOfFile
 import platform.posix.memcpy
 
 internal actual object ModelLoader {
