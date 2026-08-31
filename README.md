@@ -1,6 +1,5 @@
 # Vectora
 
-![Vectora Intro](./intro.gif)
 
 **The on-device lightning-fast semantic search engine for the next generation of Mobile applications.**
 
