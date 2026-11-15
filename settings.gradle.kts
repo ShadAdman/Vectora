@@ -29,6 +29,7 @@ dependencyResolutionManagement {
 
 include(":vectora-core")
 include(":vectora-engine")
+include(":vectora-engine-skainet")
 include(":vectora-search")
 include(":vectora-caching")
 include(":vectora-query")

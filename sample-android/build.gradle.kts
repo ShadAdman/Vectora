@@ -15,8 +15,8 @@ kotlin {
 dependencies {
     implementation(project(":vectora-core"))
     implementation(project(":vectora-engine"))
+    implementation(project(":vectora-engine-skainet"))
     implementation(project(":vectora-search"))
-    implementation(project(":vectora-caching"))
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.activity.compose)

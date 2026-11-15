@@ -3,7 +3,7 @@ package org.shad.adman.vectora.search
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.shad.adman.vectora.caching.VectoraCache
+import org.shad.adman.vectora.core.cache.VectoraCache
 import org.shad.adman.vectora.core.embedding.EmbeddingEngine
 import org.shad.adman.vectora.core.model.IndexedItem
 import org.shad.adman.vectora.core.model.Vector

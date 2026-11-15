@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.mavenPublish)
 }
 
 kotlin {
@@ -16,6 +17,12 @@ kotlin {
        }
     }
     
+    jvm {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
+    }
+
     listOf(
         iosArm64(),
         iosSimulatorArm64()
@@ -33,4 +40,9 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    if (project.findProperty("RELEASE_SIGNING_ENABLED") != "false") signAllPublications()
 }

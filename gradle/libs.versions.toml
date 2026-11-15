@@ -15,6 +15,8 @@ kotlin = "2.4.10"
 material3 = "1.11.0-alpha07"
 androidx-startup = "1.2.0"
 kflite = "3.80.30"
+skainet = "0.39.1"
+skainet-transformers = "0.39.1"
 kotlinx-coroutines = "1.11.0"
 kotlinx-serialization = "1.11.0"
 maven-publish = "0.30.0"
@@ -44,6 +46,13 @@ compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-previ
 compose-materialIconsExtended = { module = "androidx.compose.material:material", version.ref = "composeMultiplatform" }
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 kflite = { module = "io.github.shadadman:kflite-core", version.ref = "kflite" }
+skainet-lang-core = { module = "sk.ainet.core:skainet-lang-core", version.ref = "skainet" }
+skainet-backend-cpu = { module = "sk.ainet.core:skainet-backend-cpu", version.ref = "skainet" }
+skainet-backend-jni-cpu = { module = "sk.ainet.core:skainet-backend-jni-cpu", version.ref = "skainet" }
+skainet-io-core = { module = "sk.ainet.core:skainet-io-core", version.ref = "skainet" }
+skainet-io-safetensors = { module = "sk.ainet.core:skainet-io-safetensors", version.ref = "skainet" }
+skainet-io-gguf = { module = "sk.ainet.core:skainet-io-gguf", version.ref = "skainet" }
+skainet-transformers-bert = { module = "sk.ainet.transformers:skainet-transformers-inference-bert", version.ref = "skainet-transformers" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 realm-base = { module = "com.infomaniak.realm.kotlin:library-base", version.ref = "realm" }
 

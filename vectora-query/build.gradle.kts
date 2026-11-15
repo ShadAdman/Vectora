@@ -43,5 +43,5 @@ kotlin {
 
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    signAllPublications()
+    if (project.findProperty("RELEASE_SIGNING_ENABLED") != "false") signAllPublications()
 }
