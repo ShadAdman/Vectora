@@ -13,8 +13,8 @@ import kotlin.test.assertTrue
  * [BertGgufNameResolver] + [transposeGgufWeightTensors]. Covers both a
  * packed-block format (Q8_0, via community `leliuga/all-MiniLM-L6-v2-GGUF`)
  * and a dense narrow-float format (F16, via `caliex/all-MiniLM-L6-v2-f16.gguf`)
- * — the two exercise different code paths (Q8_0BlockTensorData reshape vs.
- * plain dequant-to-fp32).
+ * — the two exercise different code paths. Q8_0 is checked both with the
+ * encoder weights kept packed (the default) and expanded to fp32.
  */
 class GgufSmokeTest {
 
@@ -25,14 +25,15 @@ class GgufSmokeTest {
         checkNotNull(javaClass.classLoader.getResourceAsStream(name)) { "missing test resource $name" }
             .readBytes().decodeToString()
 
-    private suspend fun assertGgufTracksFp32(ggufFileName: String) {
+    private suspend fun assertGgufTracksFp32(ggufFileName: String, keepPacked: Boolean = true) {
         val gguf = modelDir.resolve(ggufFileName)
         if (!Files.exists(gguf) || !Files.exists(modelDir.resolve("model.safetensors"))) return
         val configJson = Files.readString(modelDir.resolve("config.json"))
         val vocab = resource("vocab.txt")
 
         val quantized = SkaiNetEmbeddingEngine.create(
-            ModelSource.Gguf(Files.readAllBytes(gguf), configJson), vocab)
+            ModelSource.Gguf(Files.readAllBytes(gguf), configJson), vocab,
+            SkaiNetEngineConfig(keepQuantizedWeightsPacked = keepPacked))
         val fp32 = SkaiNetEmbeddingEngine.create(
             ModelSource.SafeTensors(Files.readAllBytes(modelDir.resolve("model.safetensors")), configJson), vocab)
 
@@ -57,6 +58,11 @@ class GgufSmokeTest {
     @Test
     fun q8_0GgufTracksFp32SafeTensors() = runTest(timeout = kotlin.time.Duration.parse("10m")) {
         assertGgufTracksFp32("model.q8_0.gguf")
+    }
+
+    @Test
+    fun q8_0GgufExpandedToFp32TracksFp32SafeTensors() = runTest(timeout = kotlin.time.Duration.parse("10m")) {
+        assertGgufTracksFp32("model.q8_0.gguf", keepPacked = false)
     }
 
     @Test

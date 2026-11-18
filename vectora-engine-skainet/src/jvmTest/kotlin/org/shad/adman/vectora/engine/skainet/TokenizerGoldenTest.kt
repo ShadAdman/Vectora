@@ -2,7 +2,7 @@ package org.shad.adman.vectora.engine.skainet
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import sk.ainet.models.bert.HuggingFaceTokenizer
+import sk.ainet.frontend.tokenizer.TextFrontEnds
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -21,7 +21,7 @@ class TokenizerGoldenTest {
         checkNotNull(javaClass.classLoader.getResourceAsStream(name)) { "missing test resource $name" }
             .readBytes().decodeToString()
 
-    private val tokenizer = HuggingFaceTokenizer.fromVocabTxt(resource("vocab.txt"))
+    private val tokenizer = TextFrontEnds.fromVocabTxt(resource("vocab.txt"))
     private val goldens = Json.decodeFromString<List<GoldenCase>>(resource("tokenizer_goldens.json"))
 
     @Test
@@ -40,11 +40,11 @@ class TokenizerGoldenTest {
             val output = tokenizer.encodeForBert(text, maxLen)
             assertContentEquals(
                 case.input_ids.toIntArray(),
-                output.inputIds,
+                output.ids,
                 "token ids diverge for: ${text.take(60)}"
             )
-            assertEquals(output.inputIds.size, output.attentionMask.size)
-            assertContentEquals(IntArray(output.inputIds.size) { 1 }, output.attentionMask)
+            assertEquals(output.ids.size, output.attentionMask.size)
+            assertContentEquals(IntArray(output.ids.size) { 1 }, output.attentionMask)
         }
     }
 }
