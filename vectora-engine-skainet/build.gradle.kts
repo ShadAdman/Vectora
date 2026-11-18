@@ -28,7 +28,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":vectora-core"))
+            implementation(project.dependencies.platform(libs.skainet.bom))
+            implementation(project.dependencies.platform(libs.skainet.transformers.bom))
             implementation(libs.skainet.transformers.bert)
+            implementation(libs.skainet.frontend.core)
+            implementation(libs.skainet.frontend.text)
             implementation(libs.skainet.lang.core)
             implementation(libs.skainet.io.core)
             implementation(libs.skainet.io.safetensors)
@@ -54,4 +58,10 @@ kotlin {
 mavenPublishing {
     publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
     if (project.findProperty("RELEASE_SIGNING_ENABLED") != "false") signAllPublications()
+}
+
+// SKaiNET's JVM CPU backend uses the Panama Vector API for SIMD kernels; the
+// incubator module must be enabled at JVM start or it falls back to scalar code.
+tasks.withType<Test>().configureEach {
+    jvmArgs("--add-modules", "jdk.incubator.vector")
 }

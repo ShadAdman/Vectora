@@ -8,14 +8,23 @@ import org.shad.adman.vectora.core.embedding.NormalizedEmbeddingEngine
 import org.shad.adman.vectora.core.model.Vector
 import sk.ainet.apps.llm.weights.BertSafeTensorsNameResolver
 import sk.ainet.context.DirectCpuExecutionContext
+import sk.ainet.frontend.text.Encoding
+import sk.ainet.frontend.text.Padding
+import sk.ainet.frontend.text.Truncation
+import sk.ainet.frontend.tokenizer.TextFrontEnds
+import sk.ainet.frontend.tokenizer.WordPieceTokenizer
+import sk.ainet.io.ByteArrayRandomAccessSource
 import sk.ainet.io.ParametersLoader
 import sk.ainet.io.gguf.StreamingGgufParametersLoader
 import sk.ainet.io.safetensors.SafeTensorsParametersLoader
+import sk.ainet.lang.memory.plan.EncodingRequest
+import sk.ainet.lang.memory.plan.WeightForm
+import sk.ainet.lang.memory.plan.WeightShapeOrientation
 import sk.ainet.lang.types.FP32
 import sk.ainet.models.bert.BertConfigParser
 import sk.ainet.models.bert.BertEncoderRuntime
 import sk.ainet.models.bert.BertNetworkLoader
-import sk.ainet.models.bert.HuggingFaceTokenizer
+import sk.ainet.models.bert.PooledExecutionContext
 import sk.ainet.models.bert.createBertEncoderRuntime
 
 /**
@@ -31,7 +40,7 @@ import sk.ainet.models.bert.createBertEncoderRuntime
  */
 public class SkaiNetEmbeddingEngine private constructor(
     private val runtime: BertEncoderRuntime<FP32>,
-    private val tokenizer: HuggingFaceTokenizer,
+    private val tokenizer: WordPieceTokenizer,
     private val config: SkaiNetEngineConfig,
 ) : NormalizedEmbeddingEngine {
 
@@ -47,11 +56,18 @@ public class SkaiNetEmbeddingEngine private constructor(
     }
 
     override suspend fun embed(texts: List<String>): List<Vector> = withContext(config.dispatcher) {
-        texts.map { text ->
-            val vector = embedLocked(text)
-            yield()
-            vector
+        if (texts.size <= 1 || config.batchSize <= 1) {
+            return@withContext texts.map { text -> embedLocked(text).also { yield() } }
         }
+        // Batch texts of similar length together so padding to the longest
+        // row of each batch wastes as little compute as possible.
+        val vectors = arrayOfNulls<Vector>(texts.size)
+        texts.indices.sortedBy { texts[it].length }.chunked(config.batchSize).forEach { indices ->
+            val embedded = embedBatchLocked(indices.map { texts[it] })
+            indices.forEachIndexed { position, index -> vectors[index] = embedded[position] }
+            yield()
+        }
+        vectors.map { checkNotNull(it) }
     }
 
     /** Embeds a search query, applying [SkaiNetEngineConfig.queryPrefix] if configured. */
@@ -61,7 +77,13 @@ public class SkaiNetEmbeddingEngine private constructor(
     private suspend fun embedLocked(text: String): Vector = inferenceLock.withLock {
         check(!closed) { "SkaiNetEmbeddingEngine is closed" }
         val encoded = tokenizer.encodeForBert(text, config.maxSeqLen)
-        Vector(runtime.encode(encoded.inputIds, encoded.attentionMask))
+        Vector(runtime.encode(encoded.ids, encoded.attentionMask))
+    }
+
+    private suspend fun embedBatchLocked(texts: List<String>): List<Vector> = inferenceLock.withLock {
+        check(!closed) { "SkaiNetEmbeddingEngine is closed" }
+        val batch = tokenizer.encodeBatch(texts, Padding.Longest, Truncation.Longest(config.maxSeqLen))
+        runtime.encodeBatch(batch.ids, batch.seqLen, batch.attentionMask).map(::Vector)
     }
 
     override fun close() {
@@ -69,6 +91,37 @@ public class SkaiNetEmbeddingEngine private constructor(
     }
 
     public companion object {
+
+        // GGUF lists a 2D weight's dimensions as [in, out]; OUT_IN relabels them
+        // to the [out, in] order the BERT network expects (the bytes already match).
+        private val GGUF_AS_STORED = WeightForm(shape = WeightShapeOrientation.OUT_IN)
+        private val GGUF_AS_FP32 = WeightForm(
+            encoding = EncodingRequest.DequantizeTo(FP32),
+            shape = WeightShapeOrientation.OUT_IN,
+        )
+
+        /**
+         * Quantized encoder weights stay packed when [keepPacked]; embedding
+         * tables (`token_embd`, `position_embd`, `token_types`) are always
+         * expanded to FP32, because the embedding lookup cannot read packed
+         * blocks as of SKaiNET 0.64.0.
+         */
+        private fun ggufWeightForm(tensorName: String, keepPacked: Boolean): WeightForm {
+            val embeddingTable = tensorName.contains("embd") || tensorName.contains("token_types")
+            return if (keepPacked && !embeddingTable) GGUF_AS_STORED else GGUF_AS_FP32
+        }
+
+        private val FLOAT_DTYPES = setOf("F64", "F32", "F16", "BF16")
+
+        /**
+         * HuggingFace BERT checkpoints carry an I64 `embeddings.position_ids`
+         * buffer the encoder never reads (positions are derived arithmetically);
+         * loading only float tensors keeps the single-dtype load valid.
+         */
+        private fun floatSafeTensorsLoader(bytes: ByteArray) = SafeTensorsParametersLoader(
+            sourceProvider = { ByteArrayRandomAccessSource(bytes) },
+            tensorFilter = { it.dtype in FLOAT_DTYPES },
+        )
 
         /**
          * Loads a model and builds a ready-to-use engine. Heavy work (weight
@@ -80,7 +133,7 @@ public class SkaiNetEmbeddingEngine private constructor(
             vocabText: String,
             config: SkaiNetEngineConfig = SkaiNetEngineConfig(),
         ): SkaiNetEmbeddingEngine = withContext(config.dispatcher) {
-            val ctx = DirectCpuExecutionContext()
+            val ctx = PooledExecutionContext(DirectCpuExecutionContext())
             val bertConfig = when (model) {
                 is ModelSource.SafeTensors -> BertConfigParser.parse(model.configJson, model.denseConfigJson)
                 is ModelSource.Gguf -> BertConfigParser.parse(model.configJson)
@@ -90,23 +143,19 @@ public class SkaiNetEmbeddingEngine private constructor(
             val loaders = buildList<ParametersLoader> {
                 when (model) {
                     is ModelSource.SafeTensors -> {
-                        val sanitized = stripNonFloatTensors(model.model)
-                        add(SafeTensorsParametersLoader(sourceProvider = { ByteArrayRandomAccessSource(sanitized) }))
-                        model.denseProjection?.let { dense ->
-                            val sanitizedDense = stripNonFloatTensors(dense)
-                            add(SafeTensorsParametersLoader(sourceProvider = { ByteArrayRandomAccessSource(sanitizedDense) }))
-                        }
+                        add(floatSafeTensorsLoader(model.model))
+                        model.denseProjection?.let { dense -> add(floatSafeTensorsLoader(dense)) }
                     }
-                    is ModelSource.Gguf ->
-                        add(StreamingGgufParametersLoader(sourceProvider = { ByteArrayRandomAccessSource(model.model) }))
+                    is ModelSource.Gguf -> add(
+                        StreamingGgufParametersLoader(
+                            sourceProvider = { ByteArrayRandomAccessSource(model.model) },
+                            weightFormFor = { name -> ggufWeightForm(name, config.keepQuantizedWeightsPacked) },
+                        )
+                    )
                 }
             }
 
-            val loaded = BertNetworkLoader.loadWeightTensors(loaders, ctx, FP32::class)
-            val tensors = when (model) {
-                is ModelSource.SafeTensors -> loaded
-                is ModelSource.Gguf -> transposeGgufWeightTensors(loaded, ctx)
-            }
+            val tensors = BertNetworkLoader.loadWeightTensors(loaders, ctx, FP32::class)
             val runtime = createBertEncoderRuntime<FP32>(
                 config = bertConfig,
                 tensors = tensors,
@@ -119,7 +168,14 @@ public class SkaiNetEmbeddingEngine private constructor(
                 mode = config.executionMode,
                 pooling = pooling,
             )
-            SkaiNetEmbeddingEngine(runtime, HuggingFaceTokenizer.fromVocabTxt(vocabText), config)
+            SkaiNetEmbeddingEngine(runtime, TextFrontEnds.fromVocabTxt(vocabText), config)
         }
     }
 }
+
+/**
+ * Tokenizes like HuggingFace does for uncased BERT (normalization, WordPiece,
+ * [CLS]/[SEP]) and truncates to [maxSeqLen] tokens.
+ */
+internal fun WordPieceTokenizer.encodeForBert(text: String, maxSeqLen: Int): Encoding =
+    encodeWithMetadata(text, truncation = Truncation.Longest(maxSeqLen))
