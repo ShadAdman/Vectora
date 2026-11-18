@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 /**
  * GGUF quality gate: quantized/narrow-float GGUF models must stay close to
  * the fp32 safetensors engine (cosine >= 0.99 per sentence), through
- * [BertGgufNameResolver] + [transposeGgufWeightTensors]. Covers both a
+ * [BertGgufNameResolver] and the GGUF loader's weight forms. Covers both a
  * packed-block format (Q8_0, via community `leliuga/all-MiniLM-L6-v2-GGUF`)
  * and a dense narrow-float format (F16, via `caliex/all-MiniLM-L6-v2-f16.gguf`)
  * — the two exercise different code paths. Q8_0 is checked both with the

@@ -32,7 +32,7 @@ import sk.ainet.io.weights.WeightNameResolver
  *
  * Every 2D tensor above is stored by GGUF with dimensions in reverse (`ne[]`)
  * order relative to what this resolver's names get matched against — a shape
- * relabel only, not a data permutation. See [transposeGgufWeightTensors].
+ * relabel only, not a data permutation; the GGUF loader does it (`WeightShapeOrientation.OUT_IN`).
  */
 internal class BertGgufNameResolver(private val tensorNames: Set<String>) : WeightNameResolver {
 
